@@ -1,0 +1,17 @@
+{
+    "name": "update-client",
+    "config": {
+        "storage-address": {
+            "help": "When using address based storage (FlashIAP, Block Device), this is the starting address.",
+            "value": "0"
+        },
+        "storage-size": {
+            "help": "Total storage allocated.",
+            "value": "0"
+        },
+        "storage-locations": {
+            "help": "Number of equally sized locations the storage space should be split into.",
+            "value": "1"
+        }
+    }
+}
