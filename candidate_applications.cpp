@@ -36,11 +36,11 @@ CandidateApplications::CandidateApplications(FlashUpdater &flashUpdater,
             uint32_t slotSize = 0;
             int32_t result = getCandidateAddress(slotIndex, candidateAddress, slotSize);
             if (result != UC_ERR_NONE) {
-                tr_error(" Application at slot %d is not valid: %d", slotIndex, result);
+                tr_error(" Application at slot %" PRIu32 " is not valid: %" PRIi32 "", slotIndex, result);
                 continue;
             }
 
-            tr_debug(" Slot %d: application header address: 0x%08x application address 0x%08x (slot size %d)",
+            tr_debug(" Slot %" PRIu32 ": application header address: 0x%08" PRIx32 " application address 0x%08" PRIx32 " (slot size %" PRIu32 ")",
                      slotIndex, candidateAddress, candidateAddress + headerSize, slotSize);
             _candidateApplicationArray[slotIndex] = new update_client::MbedApplication(_flashUpdater,
                                                                                        candidateAddress,
@@ -108,65 +108,65 @@ int32_t CandidateApplications::getCandidateAddress(uint32_t slotIndex,
 
 void CandidateApplications::logCandidateAddress(uint32_t slotIndex) const
 {
-    tr_debug(" Slot %d: Storage address: 0x%08x Storage size: %d", slotIndex, _storageAddress, _storageSize);
+    tr_debug(" Slot %" PRIu32 ": Storage address: 0x%08" PRIx32 " Storage size: %" PRIu32 "", slotIndex, _storageAddress, _storageSize);
 
     // find the start address of the whole storage area. It needs to be aligned to
     // sector boundary and we cannot go outside user defined storage area, hence
     // rounding up to sector boundary
     uint32_t storageStartAddr = _flashUpdater.alignAddressToSector(_storageAddress, false);
-    tr_debug(" Storage start address (slot %d): 0x%08x", slotIndex, storageStartAddr);
+    tr_debug(" Storage start address (slot %" PRIu32 "): 0x%08" PRIx32 "", slotIndex, storageStartAddr);
 
     // find the end address of the whole storage area. It needs to be aligned to
     // sector boundary and we cannot go outside user defined storage area, hence
     // rounding down to sector boundary
     uint32_t storageEndAddr = _flashUpdater.alignAddressToSector(_storageAddress + _storageSize, true);
-    tr_debug(" Storage end address (slot %d): 0x%08x", slotIndex, storageEndAddr);
+    tr_debug(" Storage end address (slot %" PRIu32 "): 0x%08" PRIx32 "", slotIndex, storageEndAddr);
 
     // find the maximum size each slot can have given the start and end, without
     // considering the alignment of individual slots
     uint32_t maxSlotSize = (storageEndAddr - storageStartAddr) / _nbrOfSlots;
-    tr_debug(" maxSlotSize (slot %d): %d", slotIndex, maxSlotSize);
+    tr_debug(" maxSlotSize (slot %" PRIu32 "): %" PRIu32 "", slotIndex, maxSlotSize);
 
     // find the start address of slot. It needs to align to sector boundary. We
     // choose here to round down at each slot boundary
     uint32_t slotStartAddr = _flashUpdater.alignAddressToSector(storageStartAddr + slotIndex * maxSlotSize, true);
-    tr_debug(" Slot start address (slot %d): 0x%08x", slotIndex, slotStartAddr);
+    tr_debug(" Slot start address (slot %" PRIu32 "): 0x%08" PRIx32 "", slotIndex, slotStartAddr);
 
     // find the end address of the slot, rounding down to sector boundary same as
     // the slot start address so that we make sure two slot don't overlap
     uint32_t slotEndAddr = _flashUpdater.alignAddressToSector(slotStartAddr + maxSlotSize, true);
-    tr_debug(" Slot end address (slot %d): 0x%08x", slotIndex, slotEndAddr);
+    tr_debug(" Slot end address (slot %" PRIu32 "): 0x%08" PRIx32 "", slotIndex, slotEndAddr);
 }
     
 bool CandidateApplications::hasValidNewerApplication(MbedApplication &activeApplication,
                                                      uint32_t &newestSlotIndex) const
 {
-    tr_debug(" Checking for newer applications on %d slots", _nbrOfSlots);
+    tr_debug(" Checking for newer applications on %" PRIu32 " slots", _nbrOfSlots);
     newestSlotIndex = _nbrOfSlots;
     for (uint32_t slotIndex = 0; slotIndex < _nbrOfSlots; slotIndex++) {
         // Only hash check firmwares with higher version number than the
         // active image and with a different hash. This prevents rollbacks
         // and hash checks of old images. If the active image is not valid,
         // bestStoredFirmwareImageDetails.version equals 0
-        tr_debug(" Checking application at slot %d", slotIndex);
+        tr_debug(" Checking application at slot %" PRIu32 "", slotIndex);
         MbedApplication &newestApplication = newestSlotIndex == _nbrOfSlots ?
                                              activeApplication : *_candidateApplicationArray[newestSlotIndex];
 
         if (_candidateApplicationArray[slotIndex]->isNewerThan(newestApplication)) {
 #if MBED_CONF_MBED_TRACE_ENABLE
             if (newestSlotIndex == _nbrOfSlots) {
-                tr_debug(" Candidate application at slot %d is newer than the active one", slotIndex);
+                tr_debug(" Candidate application at slot %" PRIu32 " is newer than the active one", slotIndex);
             } else {
-                tr_debug(" Candidate application at slot %d is newer than application at slot %d",
+                tr_debug(" Candidate application at slot %" PRIu32 " is newer than application at slot %" PRIu32 "",
                          slotIndex, newestSlotIndex);
             }
 #endif
             int32_t result = _candidateApplicationArray[slotIndex]->checkApplication();
             if (result != UC_ERR_NONE) {
-                tr_error(" Candidate application at slot %d is not valid: %d", slotIndex, result);
+                tr_error(" Candidate application at slot %" PRIu32 " is not valid: %" PRIi32 "", slotIndex, result);
                 continue;
             }
-            tr_debug(" Candidate application at slot %d is valid", slotIndex);
+            tr_debug(" Candidate application at slot %" PRIu32 " is valid", slotIndex);
 
             // update the newest slot index
             newestSlotIndex = slotIndex;

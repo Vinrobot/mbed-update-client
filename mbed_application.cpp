@@ -48,7 +48,7 @@ uint64_t MbedApplication::getFirmwareVersion()
     if (! _applicationHeader.initialized) {
         int32_t result = readApplicationHeader();
         if (result != UC_ERR_NONE) {
-            tr_error(" Invalid application header: %d", result);
+            tr_error(" Invalid application header: %" PRIi32 "", result);
             _applicationHeader.state = NOT_VALID;
             return 0;
         }
@@ -62,7 +62,7 @@ uint64_t MbedApplication::getFirmwareSize()
     if (! _applicationHeader.initialized) {
         int32_t result = readApplicationHeader();
         if (result != UC_ERR_NONE) {
-            tr_error(" Invalid application header: %d", result);
+            tr_error(" Invalid application header: %" PRIi32 "", result);
             _applicationHeader.state = NOT_VALID;
             return 0;
         }
@@ -103,7 +103,7 @@ int32_t MbedApplication::checkApplication()
     // read the header
     int32_t result = readApplicationHeader();
     if (result != UC_ERR_NONE) {
-        tr_error(" Invalid application header: %d", result);
+        tr_error(" Invalid application header: %" PRIi32 "", result);
         _applicationHeader.state = NOT_VALID;
         return result;
     }
@@ -121,7 +121,7 @@ int32_t MbedApplication::checkApplication()
         uint32_t remaining = _applicationHeader.firmwareSize;
 
         // read full image
-        tr_debug(" Calculating hash (start address 0x%08x, size %lld)",
+        tr_debug(" Calculating hash (start address 0x%08" PRIx32 ", size %" PRIu64 ")",
                  _applicationAddress, _applicationHeader.firmwareSize);
         while (remaining > 0) {
             // read full buffer or what is remaining
@@ -174,22 +174,22 @@ void MbedApplication::logApplicationInfo() const
         tr_debug("Application not initialized");
     }
     else {
-        tr_debug(" Magic %d, Version %d", _applicationHeader.magic, _applicationHeader.headerVersion);
+        tr_debug(" Magic %" PRIu32 ", Version %" PRIu32 "", _applicationHeader.magic, _applicationHeader.headerVersion);
     }
 }
 
 void MbedApplication::compareTo(MbedApplication &otherApplication)
 {
-    tr_debug(" Comparing applications at address 0x%08x and 0x%08x",
+    tr_debug(" Comparing applications at address 0x%08" PRIx32 " and 0x%08" PRIx32 "",
              _applicationAddress, otherApplication._applicationAddress); 
 
-    tr_debug(" Checking application at address 0x%08x", _applicationAddress);
+    tr_debug(" Checking application at address 0x%08" PRIx32 "", _applicationAddress);
     int32_t result = checkApplication();
     if (result != UC_ERR_NONE) {
         tr_error(" Application is not valid");
         return;
     }
-    tr_debug(" Checking application at address 0x%08x", otherApplication._applicationAddress);
+    tr_debug(" Checking application at address 0x%08" PRIx32 "", otherApplication._applicationAddress);
     result = otherApplication.checkApplication();
     if (result != UC_ERR_NONE) {
         tr_error(" Application is not valid");
@@ -218,7 +218,7 @@ void MbedApplication::compareTo(MbedApplication &otherApplication)
     if (_applicationHeader.firmwareSize == otherApplication._applicationHeader.firmwareSize) {
         tr_debug(" Comparing application binaries");
         const uint32_t pageSize = _flashUpdater.get_page_size();
-        tr_debug("Flash page size is %d", pageSize);
+        tr_debug("Flash page size is %" PRIu32 "", pageSize);
 
         std::unique_ptr<char> readPageBuffer1 = std::unique_ptr<char>(new char[pageSize]);
         std::unique_ptr<char> readPageBuffer2 = std::unique_ptr<char>(new char[pageSize]);
@@ -229,19 +229,19 @@ void MbedApplication::compareTo(MbedApplication &otherApplication)
         while (nbrOfBytes < _applicationHeader.firmwareSize) {
             result = _flashUpdater.readPage(pageSize, readPageBuffer1.get(), address1);
             if (result != UC_ERR_NONE) {
-                tr_error("Cannot read application 1 (address 0x%08x)", address1);
+                tr_error("Cannot read application 1 (address 0x%08" PRIx32 ")", address1);
                 binariesMatch = false;
                 break;
             }
             result = _flashUpdater.readPage(pageSize, readPageBuffer2.get(), address2);
             if (result != UC_ERR_NONE) {
-                tr_error("Cannot read application 2 (address 0x%08x)", address2);
+                tr_error("Cannot read application 2 (address 0x%08" PRIx32 ")", address2);
                 binariesMatch = false;
                 break;
             }
 
             if (memcmp(readPageBuffer1.get(), readPageBuffer2.get(), pageSize) != 0) {
-                tr_error("Applications differ at byte %d (address1 0x%08x - address2 0x%08x)",
+                tr_error("Applications differ at byte %" PRIu32 " (address1 0x%08" PRIx32 " - address2 0x%08" PRIx32 ")",
                          nbrOfBytes, address1, address2);
                 binariesMatch = false;
                 break;
@@ -282,7 +282,7 @@ int32_t MbedApplication::readApplicationHeader()
                         // parse the header
                         result = parseInternalHeaderV2(read_buffer);
                         if (result != UC_ERR_NONE) {
-                            tr_error(" Failed to parse header: %d", result);
+                            tr_error(" Failed to parse header: %" PRIi32 "", result);
                         }
                     } else {
                         tr_error("Flash read failed: %d", err);
@@ -334,7 +334,7 @@ int32_t MbedApplication::parseInternalHeaderV2(const uint8_t *pBuffer)
             _applicationHeader.firmwareVersion = parseUint64(&pBuffer[kFirmwareVersionOffsetV2]);
             _applicationHeader.firmwareSize = parseUint64(&pBuffer[kFirmwareSizeOffsetV2]);
 
-            tr_debug(" headerVersion %d, firmwareVersion %lld, firmwareSize %lld",
+            tr_debug(" headerVersion %" PRIi32 ", firmwareVersion %" PRIu64 ", firmwareSize %" PRIu64 "",
                      _applicationHeader.headerVersion, _applicationHeader.firmwareVersion,
                      _applicationHeader.firmwareSize);
 

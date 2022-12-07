@@ -7,6 +7,7 @@
 
 #include "candidate_applications.hpp"
 #include "flash_updater.hpp"
+#include "uc_error_codes.hpp"
 
 namespace update_client {
 
@@ -60,7 +61,7 @@ void USBSerialUC::downloadFirmware()
 
             // recompute the header size (accounting for alignment)
             const uint32_t headerSize = APPLICATION_ADDR - HEADER_ADDR;
-            tr_debug(" Application header size is %d", headerSize);
+            tr_debug(" Application header size is %" PRIu32 "", headerSize);
 
             // create the CandidateApplications instance for receiving the update
             std::unique_ptr<CandidateApplications> candidateApplications = std::unique_ptr<CandidateApplications>(
@@ -72,9 +73,9 @@ void USBSerialUC::downloadFirmware()
 
             // get the slot index to be used for storing the candidate application
             tr_debug("Getting slot index...");
-            int slotIndex = candidateApplications.get()->getSlotForCandidate();
+            uint32_t slotIndex = candidateApplications.get()->getSlotForCandidate();
     
-            tr_debug("Reading application info for slot %d", slotIndex);
+            tr_debug("Reading application info for slot %" PRIu32 "", slotIndex);
             candidateApplications.get()->getMbedApplication(slotIndex).logApplicationInfo();
             
             uint32_t candidateApplicationAddress = 0;            
@@ -82,9 +83,13 @@ void USBSerialUC::downloadFirmware()
             int32_t result = candidateApplications.get()->getCandidateAddress(slotIndex, 
                                                                               candidateApplicationAddress, 
                                                                               slotSize);
+            if (result != UC_ERR_NONE) {
+                tr_error("getCandidateAddress failed: %" PRIi32 "", result);
+                return;
+            }
             uint32_t addr = candidateApplicationAddress;
             uint32_t sectorSize = flashUpdater.get_sector_size(addr);
-            tr_debug("Using slot %d and starting to write at address 0x%08x with sector size %d (aligned %d)", 
+            tr_debug("Using slot %" PRIu32 " and starting to write at address 0x%08" PRIx32 " with sector size %" PRIu32 " (aligned %" PRIu32 ")", 
                      slotIndex, addr, sectorSize, addr % sectorSize);
 
             uint32_t nextSector = addr + sectorSize;
@@ -97,7 +102,7 @@ void USBSerialUC::downloadFirmware()
             while (_usbSerial.connected()) {
                 // receive data for this page
                 memset(writePageBuffer.get(), 0, sizeof(char) * pageSize);
-                for (int i = 0; i < pageSize; i++) {
+                for (uint32_t i = 0; i < pageSize; i++) {
                     writePageBuffer.get()[i] = _usbSerial.getc();
                 }
 
@@ -107,7 +112,7 @@ void USBSerialUC::downloadFirmware()
 
                 // update progress
                 nbrOfBytes += pageSize;
-                printf("Received %05u bytes\r", nbrOfBytes);
+                printf("Received %05" PRIu32 " bytes\r", nbrOfBytes);
             }
 
             // compare the active application with the downloaded one
@@ -127,7 +132,7 @@ void USBSerialUC::downloadFirmware()
 
             flashUpdater.deinit();
 
-            tr_debug("Nbr of bytes received %d", nbrOfBytes);
+            tr_debug("Nbr of bytes received %" PRIu32 "", nbrOfBytes);
         }
 
         // check whether the thread has been stopped

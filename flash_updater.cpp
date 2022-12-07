@@ -18,7 +18,7 @@ int32_t FlashUpdater::readPage(uint32_t pageSize, char *readPageBuffer, uint32_t
     //tr_debug(" Reading page of size %d at address 0x%08x", pageSize, addr);
     int32_t err = read(readPageBuffer, addr, pageSize);
     if (0 != err) {
-        tr_error("Flash read failed: %d", err);
+        tr_error("Flash read failed: %" PRIi32 "", err);
         return err;
     }
     // update address
@@ -38,7 +38,7 @@ int32_t FlashUpdater::writePage(uint32_t pageSize, char *writePageBuffer, char *
         // tr_debug("Erasing sector of size %d at address 0x%08x", get_sector_size(addr), addr);
         err = erase(addr, get_sector_size(addr));
         if (0 != err) {
-            tr_error("Flash erase failed: %d", err);
+            tr_error("Flash erase failed: %" PRIi32 "", err);
             return err;
         }
         sectorErased = true;
@@ -54,7 +54,7 @@ int32_t FlashUpdater::writePage(uint32_t pageSize, char *writePageBuffer, char *
     // Program page
     err = program(writePageBuffer, addr, pageSize);
     if (0 != err) {
-        tr_error("Flash program failed: %d (for %d bytes)", err, pageSize);
+        tr_error("Flash program failed: %" PRIi32 " (for %" PRIu32 " bytes)", err, pageSize);
         return err;
     }
     //tr_debug("Program %d bytes at address 0x%08x", actual, addr);
@@ -63,7 +63,7 @@ int32_t FlashUpdater::writePage(uint32_t pageSize, char *writePageBuffer, char *
     memset(readPageBuffer, 0, sizeof(char) * pageSize);
     err = read(readPageBuffer, addr, pageSize);
     if (0 != err) {
-        tr_error("Flash read failed: %d", err);
+        tr_error("Flash read failed: %" PRIi32 "", err);
         return err;
     }
     if (memcmp(writePageBuffer, readPageBuffer, pageSize) != 0) {
