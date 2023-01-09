@@ -40,7 +40,8 @@ void USBSerialUC::downloadFirmware()
 
         // so check repeatidly if we are connected
         tr_debug("Waiting for connection");
-        ThisThread::sleep_for(kWaitTimeBetweenCheck);
+        std::chrono::milliseconds sleep_for_time = kWaitTimeBetweenCheck;
+        ThisThread::sleep_for(sleep_for_time);
 
         if (_usbSerial.connected()) {
             tr_debug("Updater connected");
